@@ -1,0 +1,80 @@
+https://tuto.grademe.fr/inception/
+
+# mariadb:
+#     my.cnf
+#         sudo apt update
+#         sudo apt upgrade
+#         sudo apt install mariadb-server
+#         cat /etc/mysql/mariadb.conf.d/50-server.cnf
+
+#     Dockerfile
+#         https://mariadb.com/kb/en/creating-a-custom-container-image/
+
+# nginx:
+#     nginx.conf
+#         https://ubiq.co/tech-blog/nginx-ssl-configuration-step-step-details/
+#         sudo apt install nginx
+#         cat /etc/nginx/nginx.conf
+
+#     Dockerfile
+#         https://hub.docker.com/_/nginx
+
+# wordpress:
+#     wp-config.php
+#         https://github.com/WordPress/WordPress/blob/master/wp-config-sample.php
+    
+#     Dockerfile
+#         https://hub.docker.com/_/wordpress
+#         WP-CLI https://wp-cli.org/fr/
+
+services:
+
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    restart: always
+    expose:
+      - 3306
+    networks:
+      - inception
+
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    restart: always
+    ports:
+      - "443:443"
+    networks:
+      - inception
+
+
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    restart: always
+    expose:
+      - 9000
+    networks:
+      - inception
+
+
+
+networks:
+  inception:
+    driver: bridge
+
+
+volumes:
+  mariadb_data:
+    driver: local
+    driver_opts:
+        type: none
+        o: bind
+        device: "/home/plangloi/data/wordpress"
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "/home/plangloi/data/wordpress"
