@@ -1,11 +1,22 @@
 FROM debian:bullseye
 
-RUN apt update && apt upgrade && apt-get install mariadb-server -y && \
-    mkdir -p /var/run/mysql /run/mysql && \
-    chown -R mysql:root /run/mysql /var/run/mysql
+RUN apt update && apt upgrade -y && apt-get install mariadb-server -y
 
-# COPY ./tools/setup_database.sh ./
+# Créer le répertoire pour les sockets
+RUN mkdir -p /run/mysqld && \
+    chown -R mysql:mysql /run/mysqld
 
-COPY conf/50-server.cnf	/etc/mysql/mariadb.conf.d/50-server.cnf
+# Copier le script personnalisé (si nécessaire)
+COPY ./tools/mariadb.sh /usr/local/bin/
 
-ENTRYPOINT [ "bash", "setup_database.sh" ]
+# Donner les bonnes permissions d'exécution
+RUN chmod +x /usr/local/bin/mariadb.sh
+
+# Copier la configuration MariaDB
+COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
+
+# Entrée pour démarrer MariaDB
+ENTRYPOINT ["mysqld", "--bind-address=0.0.0.0"]
+
+# Exposer le port
+EXPOSE 3306

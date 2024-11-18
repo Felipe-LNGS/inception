@@ -1,4 +1,4 @@
-https://tuto.grademe.fr/inception/
+# https://tuto.grademe.fr/inception/
 
 # mariadb:
 #     my.cnf
@@ -37,6 +37,8 @@ services:
       - 3306
     networks:
       - inception
+    env_file:
+      - .env
 
   nginx:
     container_name: nginx
