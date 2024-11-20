@@ -9,9 +9,9 @@ if [ ! -f /var/www/wordpress/wp-config.php ]; then
   
   # Créer le fichier wp-config.php avec les informations de la base de données
   wp config create --allow-root \
-                   --dbname=$SQL_DATABASE \
-                   --dbuser=$SQL_USER \
-                   --dbpass=$SQL_PASSWORD \
+                   --dbname=$MYSQL_DATABASE \
+                   --dbuser=$MYSQL_USER \
+                   --dbpass=$MYSQL_PASSWORD \
                    --dbhost=mariadb:3306 --path='/var/www/wordpress'
 else
   echo "wp-config.php existe déjà, saut de la création."
