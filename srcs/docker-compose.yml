@@ -27,56 +27,64 @@
 #         https://hub.docker.com/_/wordpress
 #         WP-CLI https://wp-cli.org/fr/
 
+version: '3'
+
 services:
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - inception
+    depends_on: #ne pas start tant que wordpress n'a pas demarre
+      - wordpress
+    ports:
+      - 443:443
+    restart: on-failure
 
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
-    restart: always
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - inception
     expose:
       - 3306
-    networks:
-      - inception
-    env_file:
-      - .env
-
-  nginx:
-    container_name: nginx
-    build: ./requirements/nginx
-    restart: always
-    ports:
-      - "443:443"
-    networks:
-      - inception
-
-
+    env_file: .env
 
   wordpress:
     container_name: wordpress
-    build: ./requirements/wordpress
+    depends_on:
+      - mariadb
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
     restart: always
-    expose:
-      - 9000
+    env_file:
+      - .env
+    volumes:
+      - /home/plangloi/data/wordpress:/var/www/html
     networks:
       - inception
-
-
-
-networks:
-  inception:
-    driver: bridge
-
 
 volumes:
   mariadb_data:
     driver: local
     driver_opts:
-        type: none
-        o: bind
-        device: "/home/plangloi/data/wordpress"
+      type: none
+      o: bind
+      device: /home/plangloi/data/mariadb
   wordpress_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: "/home/plangloi/data/wordpress"
+      device: /home/plangloi/data/wordpress
+
+
+networks:
+  inception:
+    driver: bridge
