@@ -27,40 +27,66 @@
 #         https://hub.docker.com/_/wordpress
 #         WP-CLI https://wp-cli.org/fr/
 
-version: '3.3'
+version: '3'
 
 services:
-  mariadb:
-    image: mariadb:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    depends_on:
+      - wordpress
+    ports:
+      - 443:443
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - wordpress_data:/var/www/html
+    restart: always
     networks:
-      - wordpress_network
+      - network
+
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    #volumes allow to store in a persistent disk the content in a local disk
+    #db_data is a volume created by docker directly
+    volumes:
+      - /home/felipe/data/mysql:/var/lib/mysql
+    # in case of problem we restart automatically the container
+    networks:
+      - network
+    restart: always
+    env_file:
+      - .env
 
   wordpress:
-    image: wordpress:latest
-    environment:
-      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
-      WORDPRESS_DB_USER: ${MYSQL_USER}
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
-      WORDPRESS_DB_HOST: ${MYSQL_HOSTNAME}
-    volumes:
-      - ./wp-config.php:/var/www/html/wp-config.php
-    ports:
-      - "8080:80"
-    networks:
-      - wordpress_network
+    container_name: wordpress
+    #Create a depedency between the 2 container, db will be launched before
     depends_on:
       - mariadb
-
-networks:
-  wordpress_network:
-    driver: bridge
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - network
 
 volumes:
   mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/felipe/data/mysql
+      o: bind
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/felipe/data/wordpress
+      o: bind
+
+networks:
+  network:
+    driver: bridge

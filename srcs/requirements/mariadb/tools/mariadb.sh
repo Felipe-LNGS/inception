@@ -1,21 +1,34 @@
 #!/bin/sh
 
-# mysql --user=mysql --bootstrap CREATE DATABASEA
+# Démarrer MariaDB (sans --skip-networking, car on veut des connexions réseau)
+echo "Démarrage de MariaDB..."
+mysqld --user=mysql &
 
-service mysql start;
+# Attente explicite pour s'assurer que MariaDB est prêt
+echo "En attente que MariaDB soit prêt..."
+until mysqladmin -u root ping --silent; do
+  sleep 1
+done
 
-mysql -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;"
+# Créer la base de données si elle n'existe pas
+echo "Création de la base de données..."
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;"
 
-mysql -e "CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+# Créer l'utilisateur si nécessaire
+echo "Création de l'utilisateur..."
+mysql -u root -e "CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"
 
-mysql -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+# Accorder tous les privilèges à l'utilisateur
+echo "Accorder les privilèges..."
+mysql -u root -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@'%';"
 
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';"
+# Changer le mot de passe root
+echo "Changement du mot de passe root..."
+mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';"
 
-mysql -e "FLUSH PRIVILEGES;"
+# Appliquer les privilèges
+mysql -u root -e "FLUSH PRIVILEGES;"
 
-mysqladmin -u root -p$MYSQL_ROOT_PASSWORD shutdown
-
-# exec mysqld_safe
-
-exec mysql --user=mysql
+# Ne pas arrêter MariaDB, juste continuer à le faire fonctionner
+echo "MariaDB prêt, démarrage de mysqld..."
+exec mysqld

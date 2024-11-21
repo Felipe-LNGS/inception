@@ -1,6 +1,13 @@
 [mysqld]
+# Chemin de stockage des données
 datadir = /var/lib/mysql
-socket  = /run/mysqld/mysqld.sock
-bind_address=0.0.0.0
+
+# Écoute de toutes les adresses (utile dans Docker)
+bind-address = 0.0.0.0
 port = 3306
+
+# Utilisateur sous lequel MariaDB tourne
 user = mysql
+
+# Désactivation des liens symboliques pour éviter des erreurs dans Docker
+symbolic-links=0
