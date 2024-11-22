@@ -1,26 +1,33 @@
-FROM debian:bullseye
+#the image set is the penultime stable version of debian
+FROM	debian:bullseye
 
-# Mettre à jour et installer les paquets nécessaires
-RUN apt update && apt upgrade -y && \
-    apt install -y nginx vim curl openssl && \
-    rm -rf /var/lib/apt/lists/*
+#the args that are needed from the .env file
+ARG		DOMAIN_NAME
+ARG		CERTS_CRT
+ARG		CERTS_KEY
 
-# Générer le certificat SSL
-RUN mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -nodes \
-    -out /etc/nginx/ssl/inception.crt \
-    -keyout /etc/nginx/ssl/inception.key \
-    -subj "/C=FR/ST=IDF/L=Paris/O=42/OU=42/CN=plangloi.42.fr/UID=plangloi"
+#updates the package lists
+RUN		apt-get update && apt-get upgrade -y
 
-# Copier la configuration NGINX personnalisée
-COPY conf/nginx.conf /etc/nginx/nginx.conf
+#installing nginx and openssl
+RUN		apt-get install -y nginx \
+		openssl gettext-base && \
+		rm -rf /var/lib/apt/lists/*
 
-# Donner les bonnes permissions aux répertoires de travail
-RUN chmod 755 /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+#make nginx SSL to be able to run
+RUN		mkdir /etc/nginx/ssl
+RUN		openssl req -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
+		-out $CERTS_CRT -keyout $CERTS_KEY \
+		-subj "/C=42/ST=SP/L=SP/O=Global Security/OU=Inception/CN=$DOMAIN_NAME"
 
-# Exposer le port 443 pour HTTPS
-EXPOSE 443
+#the only port availabe according to the subject
+EXPOSE	443
 
-# Lancer NGINX en mode non-démon
-CMD ["nginx", "-g", "daemon off;"]
+#copies the Nginx configuration file to the /etc/nginx/conf.d/nginx.conf
+COPY	./conf/nginx.conf ./etc/nginx/conf.d/nginx.conf
+
+#nginx config folder
+RUN		mkdir -p /run/nginx
+
+#The CMD instruction specifies the default command to run when the container is started
+CMD		["nginx", "-g", "daemon off;"]

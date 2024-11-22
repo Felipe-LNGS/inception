@@ -1,13 +1,20 @@
+[server]
 [mysqld]
-# Chemin de stockage des données
-datadir = /var/lib/mysql
 
-# Écoute de toutes les adresses (utile dans Docker)
-bind-address = 0.0.0.0
-port = 3306
+user                    = mysql
+pid-file                = /run/mysqld/mysqld.pid
+socket                  = /run/mysqld/mysqld.sock
+basedir                 = /usr
+datadir                 = /var/lib/mysql
+tmpdir                  = /tmp
+lc-messages-dir         = /usr/share/mysql
+bind-address            = 0.0.0.0
+query_cache_size        = 16M
+log_error               = /var/log/mysql/error.log
+expire_logs_days        = 10
+character-set-server    = utf8mb4
+collation-server        = utf8mb4_general_ci
 
-# Utilisateur sous lequel MariaDB tourne
-user = mysql
-
-# Désactivation des liens symboliques pour éviter des erreurs dans Docker
-symbolic-links=0
+[embedded]
+[mariadb]
+[mariadb-10.3]

@@ -27,66 +27,78 @@
 #         https://hub.docker.com/_/wordpress
 #         WP-CLI https://wp-cli.org/fr/
 
-version: '3'
+version: "3"
 
 services:
   nginx:
     container_name: nginx
-    build: ./requirements/nginx
+    build: 
+      context: ./requirements/nginx
+      args:
+        - DOMAIN_NAME
+        - CERTS_CRT
+        - CERTS_KEY
     depends_on:
       - wordpress
     ports:
       - 443:443
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress_volume:/var/www/html/wordpress
     restart: always
     networks:
-      - network
-
-  mariadb:
-    container_name: mariadb
-    build: ./requirements/mariadb
-    #volumes allow to store in a persistent disk the content in a local disk
-    #db_data is a volume created by docker directly
-    volumes:
-      - /home/felipe/data/mysql:/var/lib/mysql
-    # in case of problem we restart automatically the container
-    networks:
-      - network
-    restart: always
-    env_file:
-      - .env
+      - inception-network
 
   wordpress:
     container_name: wordpress
-    #Create a depedency between the 2 container, db will be launched before
+    build:
+      context: ./requirements/wordpress/
+      args:
+        - WORDPRESS_DB_HOST
+        - WORDPRESS_DB_NAME
+        - WORDPRESS_URL
+        - WORDPRESS_GUEST_USER
+        - WORDPRESS_GUEST_PASSWORD
+        - WORDPRESS_DB_USER
+        - WORDPRESS_DB_PASSWORD
+        - WORDPRESS_ADMIN_USER
+        - WORDPRESS_ADMIN_PASSWORD
+        - WORDPRESS_ADMIN_EMAIL
     depends_on:
       - mariadb
-    build:
-      context: ./requirements/wordpress
-      dockerfile: Dockerfile
-    restart: always
+    image: wordpress
     env_file:
       - .env
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress_volume:/var/www/html/wordpress
+    restart: always
     networks:
-      - network
+      - inception-network
+
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb/
+      args:
+        - MYSQL_DATABASE
+        - MYSQL_ROOT
+        - MYSQL_ROOT_PASSWORD
+        - MYSQL_USER
+        - MYSQL_PASSWORD
+    image: mariadb
+    env_file:
+      - .env
+    volumes:
+      - mariadb_volume:/var/lib/mysql/
+    restart: always
+    networks:
+      - inception-network
 
 volumes:
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/felipe/data/mysql
-      o: bind
-  wordpress_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/felipe/data/wordpress
-      o: bind
+  mariadb_volume:
+    external: true
+  wordpress_volume:
+    external: true
 
 networks:
-  network:
+  inception-network:
     driver: bridge

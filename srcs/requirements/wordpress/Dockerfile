@@ -1,38 +1,47 @@
-FROM debian:bullseye
+#the image set is the penultime stable version of debian
+FROM 		debian:bullseye
 
-# Mise à jour et installation des dépendances
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y wget php7.4 php-fpm php-mysql mariadb-client tar curl netcat && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+#the args that are needed from the .env file
+ARG			WORDPRESS_DB_HOST
+ARG			WORDPRESS_DB_NAME
+ARG			WORDPRESS_URL
+ARG			WORDPRESS_GUEST_USER
+ARG			WORDPRESS_GUEST_PASSWORD
+ARG			WORDPRESS_DB_USER
+ARG			WORDPRESS_DB_PASSWORD
+ARG			WORDPRESS_ADMIN_USER
+ARG			WORDPRESS_ADMIN_PASSWORD
+ARG			WORDPRESS_ADMIN_EMAIL
 
-# Création du répertoire /run/php avec les bonnes permissions
-RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
+RUN			apt-get update
 
-# Téléchargement et extraction de WordPress
-RUN wget https://fr.wordpress.org/wordpress-6.7-fr_FR.tar.gz -P /var/www && \
-    cd /var/www && \
-    tar -xzf wordpress-6.7-fr_FR.tar.gz && \
-    rm wordpress-6.7-fr_FR.tar.gz
+#install all the needed programs for the wordpress to work (specially php and mariadb-client)
+RUN			apt-get install -y apt-utils vim wget \
+			php7.4 \
+			php7.4-fpm \
+			php7.4-mysql \
+			mariadb-client \
+			wget \
+			sudo \
+			&& mkdir /run/php
 
-# Donner les droits nécessaires à www-data
-RUN chown -R www-data:www-data /var/www/wordpress
+#set php-fm to listen through port 9000
+COPY		conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
 
-# Configuration de PHP
-RUN [ ! -f /etc/php/7.4/fpm/pool.d/www.conf ] || sed -i "s/listen =.*/listen = wordpress:9000/" /etc/php/7.4/fpm/pool.d/www.conf && \
-    echo "clear_env = no" >> /etc/php/7.4/fpm/pool.d/www.conf
+#download wp-cli and moves it to a folder inside the container
+RUN			wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar  \
+			&& chmod +x wp-cli.phar \
+			&& mv wp-cli.phar /usr/bin/wp
 
-# Installation de WP-CLI
-RUN command -v wp || (wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-    chmod +x wp-cli.phar && \
-    mv wp-cli.phar /usr/local/bin/wp)
+#exposes port 9000, which is the default port used by PHP-FPM
+EXPOSE		9000
 
-# Script d'auto-configuration pour WordPress
-COPY conf/auto_config.sh /usr/local/bin/auto_config.sh
-RUN chmod +x /usr/local/bin/auto_config.sh
-ENTRYPOINT ["/usr/local/bin/auto_config.sh"]
+#set the container initial directory
+WORKDIR		/var/www/html/wordpress
 
-# Exposer le port 9000 pour PHP
-WORKDIR /var/www/html/
-EXPOSE 9000
+#Copies the script for the installation of wordpress
+COPY		tools/auto_config.sh .
+RUN			chmod 777 auto_config.sh
 
-CMD ["/usr/sbin/php-fpm7.4", "-F"]
+#Sets the entrypoint for the container to the wp_install.sh script
+ENTRYPOINT ["sh", "auto_config.sh"]
