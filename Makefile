@@ -1,7 +1,7 @@
 LOGIN			= fif
 COMPOSE			= srcs/docker-compose.yml
 VOLUMES_PATH	= /home/$(LOGIN)/data
-DOMAIN			= 127.0.0.1       $(LOGIN).42.fr
+DOMAIN			= 127.0.0.1       plangloi.42.fr
 LOOKDOMAIN		= $(shell grep "${DOMAIN}" /etc/hosts)
 
 export VOLUMES_PATH # Make it available for the Dockerfiles
@@ -24,7 +24,9 @@ list-volumes:
 	docker volume ls
 
 up:
+	@echo "Starting the containers..."
 	docker compose --file=$(COMPOSE) up --build --detach
+	@echo "Containers are running."
 
 build:
 	sudo mkdir -p $(VOLUMES_PATH)/mysql
@@ -43,6 +45,12 @@ hosts:
 
 srcs/.env:
 	@echo "Missing .env file in srcs folder" && exit 1
+
+logs:
+	docker compose --file=$(COMPOSE) logs -f
+
+status:
+	docker compose --file=$(COMPOSE) ps
 
 down:
 	docker compose --file=$(COMPOSE) down -v --rmi all --remove-orphans

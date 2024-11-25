@@ -27,7 +27,7 @@
 #         https://hub.docker.com/_/wordpress
 #         WP-CLI https://wp-cli.org/fr/
 
-version: "3"
+version: '3'
 
 services:
   nginx:
