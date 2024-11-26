@@ -1,20 +1,10 @@
-[server]
 [mysqld]
 
-user                    = mysql
-pid-file                = /run/mysqld/mysqld.pid
-socket                  = /run/mysqld/mysqld.sock
-basedir                 = /usr
-datadir                 = /var/lib/mysql
-tmpdir                  = /tmp
-lc-messages-dir         = /usr/share/mysql
-bind-address            = 0.0.0.0
-query_cache_size        = 16M
-log_error               = /var/log/mysql/error.log
-expire_logs_days        = 10
-character-set-server    = utf8mb4
-collation-server        = utf8mb4_general_ci
-
-[embedded]
-[mariadb]
-[mariadb-10.3]
+user                    = mysql                      # Run MariaDB as the mysql user
+bind-address            = 0.0.0.0                    # Allow connections from any network interface
+datadir                 = /var/lib/mysql              # Directory where MariaDB stores its data
+socket                  = /run/mysqld/mysqld.sock     # Path to the socket for local connections
+log_error               = /var/log/mysql/error.log    # Location for error logs
+character-set-server    = utf8mb4                    # Default character set (UTF-8)
+collation-server        = utf8mb4_general_ci          # Default collation for the character set
+expire_logs_days        = 10                          # Number of days before binary logs are expired
