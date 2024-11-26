@@ -41,12 +41,13 @@ services:
     depends_on:
       - wordpress
     ports:
+      - 80:80
       - 443:443
     volumes:
       - wordpress_volume:/var/www/html/wordpress
     restart: always
     networks:
-      - inception-network
+      - inception
 
   wordpress:
     container_name: wordpress
@@ -72,7 +73,7 @@ services:
       - wordpress_volume:/var/www/html/wordpress
     restart: always
     networks:
-      - inception-network
+      - inception
 
   mariadb:
     container_name: mariadb
@@ -91,7 +92,7 @@ services:
       - mariadb_volume:/var/lib/mysql/
     restart: always
     networks:
-      - inception-network
+      - inception
 
 volumes:
   mariadb_volume:
@@ -100,5 +101,5 @@ volumes:
     external: true
 
 networks:
-  inception-network:
+  inception:
     driver: bridge

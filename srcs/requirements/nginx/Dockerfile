@@ -13,9 +13,7 @@ RUN		apt-get update && apt-get upgrade -y
 RUN		apt-get install -y nginx \
 		openssl gettext-base && \
 		rm -rf /var/lib/apt/lists/*
-RUN apt update && apt install -y nginx curl iputils-ping dnsutils \
-		&& apt clean \
-		&& rm -rf /var/lib/apt/lists/*
+
 #make nginx SSL to be able to run
 RUN		mkdir /etc/nginx/ssl
 RUN		openssl req -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
